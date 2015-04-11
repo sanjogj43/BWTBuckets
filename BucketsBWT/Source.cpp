@@ -15,7 +15,7 @@ class BWT
 {
 public:
 	vector<char> BWTString;
-	vector<short unsigned int> LCPVal;
+	vector<int> LCPVal;
 	vector<unsigned int> componentIds;
 
 	int numOfBuckets;
@@ -64,7 +64,6 @@ void BWT::findLCPArray()
 		LCPStr[j] += '\0';
 		LCPArray.push_back(LCPStr);
 		LCPVal.push_back(j);
-
 	}
 }
 
@@ -155,6 +154,7 @@ void BWT::fillUpComponentIds(int bucketId)
 	componentIds.clear();
 	LCPVal.clear();
 	LCPArray.clear();
+	BWTString.clear();
 	unsigned int kmer = 0;
 	unsigned int mask = getKmerMask();
 	int minIndex = bucketId*numEltsInEachBucket;
@@ -276,7 +276,6 @@ int main()
 	}
 	
 	s = ss.str()+"$";
-	cout << s;
 	BWT bwt;
 	bwt.origString = s;
 	int compSize = 0;
@@ -289,27 +288,41 @@ int main()
 	
 	try
 	{
+		fstream fout2;
+		fout2.open("lcpval.txt", ios::out);
 		for (int i = 0; i < bwt.numOfBuckets; i++)
 		{
 			// fill up the components
 			bwt.fillUpComponentIds(i);
-
+			
 			// Sort the components
 			bwt.QuickSort(0, bwt.componentIds.size());
 			// find BWT from sorted component ids
 			bwt.findBWT();
 			// find LCPs from sorted component ids
 			bwt.findLCPArray();
+			fout2 << "--------LCPVAL ARRAY-------" << endl;
+			for (int j = 0; j < bwt.LCPVal.size() && j < bwt.componentIds.size()&& j<bwt.BWTString.size(); j++)
+			{		
+					fout2<< "pos : " << j <<"\tIndex : "<<bwt.componentIds[j]<< "\t LCP val :" << bwt.LCPVal[j]<<"\t BWT : "<<bwt.BWTString[j]<<endl;		
+			}
+			
 			// Start : compute Super maximal repeats 
 			bwt.findSuperMaximalRepeats();
 			// End : compute Super maximal repeats 
 		}
+		fout2.close();
 	}
 	catch (const char* msg)
 	{
 		cout << "Exception : " << msg << endl;
 	}
 	cout << "over";
+	fstream fout1;
+	fout1.open("bwt.txt", ios::out);
+	for (int i = 0; i < bwt.BWTString.size();i++)
+		fout1 << bwt.BWTString[i];
+	fout1.close();
 	_getch();
 	return 0;
 
